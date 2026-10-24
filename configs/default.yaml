@@ -1,0 +1,42 @@
+# Experimental configuration (mirrors Section 3 of the paper).
+seed: 42
+
+data:
+  report_dir: data/raw/ecgen-radiology   # unpacked NLMCXR_reports.tgz
+  processed_dir: data/processed
+  test_fraction: 0.2
+  lowercase: false
+
+models:
+  mistral-7b:
+    hf_id: mistralai/Mistral-7B-Instruct-v0.2   # TODO: confirm exact v0.x
+    revision: null                              # pin commit hash for camera-ready
+  llama3-8b:
+    hf_id: meta-llama/Meta-Llama-3-8B-Instruct
+    revision: null
+  qwen-7b:
+    hf_id: Qwen/Qwen2.5-7B-Instruct             # TODO: or Qwen/Qwen3-8B
+    revision: null
+
+generation:
+  max_new_tokens: 256
+  load_in_4bit: true
+  batch_size: 8
+
+conditions:            # 2 x 2 factorial + zero-shot
+  - {name: zero-shot, selector: none,   k: 0}
+  - {name: R-5,       selector: random, k: 5}
+  - {name: R-10,      selector: random, k: 10}
+  - {name: B-5,       selector: bm25,   k: 5}
+  - {name: B-10,      selector: bm25,   k: 10}
+
+selection:
+  random_per_query: false
+  bm25_k1: 1.5
+  bm25_b: 0.75
+
+evaluation:
+  metrics: [rouge1, rouge2, rougeL, meteor, bleu4_sent, bertscore, chexbert_f1, radgraph_f1]
+  bertscore_model: roberta-large
+  bootstrap_resamples: 10000
+  alpha: 0.05
